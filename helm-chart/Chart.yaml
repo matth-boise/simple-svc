@@ -1,0 +1,4 @@
+apiVersion: v1
+description: A Helm chart for simple-svc and Envoy.  Note you must supply a name via --set name=foo
+name: simple-svc
+version: 0.1.0

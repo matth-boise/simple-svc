@@ -1,0 +1,5 @@
+# dependencies:
+# - name: cp-common
+#   alias: cpCommon
+#   version: 1.0.23
+#   repository: https://cradlepoint.jfrog.io/cradlepoint/cp-helm-all

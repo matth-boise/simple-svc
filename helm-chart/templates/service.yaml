@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+spec:
+  type: {{ .Values.serviceType }}
+  selector:
+    app:  {{ .Values.name }}
+  ports:
+    - port: {{ .Values.servicePort }}
+{{- if not .Values.envoy }}
+      targetPort: {{ .Values.containerPort }}
+{{- else }}
+      targetPort: {{ .Values.envoy.containerPort }}
+{{- end }}
+      protocol: TCP
+      name: service-port
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}-envoy
+  labels:
+    app: {{ .Values.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+spec:
+  type: ExternalName
+  externalName: 127.0.0.1
+  # ports:
+  # - port: {{ .Values.envoy.egressPort }}
+
+
+

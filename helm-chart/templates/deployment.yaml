@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ required ".Values.name must be specified!  Set this using --set name=xyz at helm command line." .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+      release: {{ .Release.Name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: {{ .Values.name }}
+        release: {{ .Release.Name }}
+    spec:
+      volumes:
+      - name: envoy-yaml
+        configMap:
+          name: {{ .Values.name }}-envoy
+
+      containers:
+{{- if .Values.envoy }}
+        - name: envoy
+          image: {{ .Values.envoy.image | quote }}
+          command: ["envoy"]
+          args: ["-c", "/etc/envoy.yaml", "-l", "debug", "--service-cluster", "$(POD_NAME)"]
+          volumeMounts:
+          - name: envoy-yaml
+            mountPath: /etc/envoy.yaml
+            subPath: envoy.yaml
+          ports:
+            - containerPort: {{ .Values.envoy.containerPort }}
+              name: envoy-port
+              protocol: TCP
+{{- end }}
+        - name: the-application
+          image: {{ .Values.image | quote }}
+          imagePullPolicy: IfNotPresent
+          # livenessProbe:
+          # readinessProbe:
+{{- if not .Values.envoy }}
+          # since envoy will front ingress, do not need to open an app port
+          ports:
+            - containerPort: {{ .Values.containerPort }}
+              name: app-port
+              protocol: TCP
+{{- end }}
+          command: [{{ .Values.command | quote }}]
+          env:
+          - name: SERVICE_NAME
+            value: {{ .Values.name | quote }}
+          - name: SERVICE_PORT
+            value: {{ .Values.containerPort | quote }}
+          - name: IP_ADDRESS
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          # NOTE: defining this env var usually overrides the dns lookup for service-b to this value
+          # - name: SERVICE_B_SERVICE_HOST
+          #   value: "172.17.0.8"
