@@ -37,7 +37,7 @@ data:
               http_filters:
               - name: envoy.router
                 config: {}
-      {{/* this listener is not used until app is changed to use service-b-envoy - so it sends to this listener (localhost:9090) */}}
+      {{/* this listener is not used until app is changed to use service-b-envoy - so it sends to this listener (localhost:80) */}}
       - address:
           socket_address:
             address: 0.0.0.0
@@ -51,11 +51,22 @@ data:
               stat_prefix: egress_http
               {{/* REVISIT: do i need to create the specific routes ahead of time????? */}}
               route_config:
-                name: serviceb_route
+                name: services_route
                 virtual_hosts:
+                - name: service-a-envoy
+                  domains:
+                  - "service-a-envoy"
+                  routes:
+                  - match:
+                      prefix: "/"
+                    route:
+                      host_rewrite: service-a
+                      cluster: service_a
+                    decorator:
+                      operation: service_b
                 - name: service-b-envoy
                   domains:
-                  - "*"
+                  - "service-b-envoy"
                   routes:
                   - match:
                       prefix: "/"
@@ -77,6 +88,14 @@ data:
         - socket_address:
             address: 127.0.0.1
             port_value: {{ .Values.containerPort }}
+      - name: service_a
+        connect_timeout: 0.250s
+        type: strict_dns
+        lb_policy: round_robin
+        hosts:
+        - socket_address:
+            address: service-a
+            port_value: 80
       - name: service_b
         connect_timeout: 0.250s
         type: strict_dns

@@ -18,7 +18,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
   if !exists {
     ip = "unknown-IP"
   }
-
+  log.Printf("%s called with Host=%s", service, r.Host)
+  
   // printing to the http.ResponseWriter returns text to http caller
   // TODO: add env POD_NAME
 
