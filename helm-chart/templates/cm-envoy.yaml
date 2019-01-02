@@ -61,9 +61,9 @@ data:
                       prefix: "/"
                     route:
                       host_rewrite: service-a
-                      cluster: service_a
+                      cluster: service-a
                     decorator:
-                      operation: service_b
+                      operation: service_a
                 - name: service-b-envoy
                   domains:
                   - "service-b-envoy"
@@ -72,7 +72,7 @@ data:
                       prefix: "/"
                     route:
                       host_rewrite: service-b
-                      cluster: service_b
+                      cluster: service-b
                     decorator:
                       operation: service_b
               http_filters:
@@ -88,7 +88,7 @@ data:
         - socket_address:
             address: 127.0.0.1
             port_value: {{ .Values.containerPort }}
-      - name: service_a
+      - name: service-a
         connect_timeout: 0.250s
         type: strict_dns
         lb_policy: round_robin
@@ -96,7 +96,7 @@ data:
         - socket_address:
             address: service-a
             port_value: 80
-      - name: service_b
+      - name: service-b
         connect_timeout: 0.250s
         type: strict_dns
         lb_policy: round_robin

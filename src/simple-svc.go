@@ -6,6 +6,7 @@ import (
   "fmt"
   "log"
   "strings"
+  "sort"
   "net/http"
 )
 
@@ -18,8 +19,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
   if !exists {
     ip = "unknown-IP"
   }
-  log.Printf("%s called with Host=%s", service, r.Host)
-  
+
+  log.Printf("%s called with Host: %s  and other headers:", service, r.Host)
+  var headers []string
+  for h := range r.Header {
+    headers = append(headers, h)
+  }
+  sort.Strings(headers)
+
+  for _, h := range headers {
+     log.Printf("      %s: %s", h, r.Header[h])
+   }
+
   // printing to the http.ResponseWriter returns text to http caller
   // TODO: add env POD_NAME
 
