@@ -19,7 +19,7 @@ data:
               codec_type: auto
               tracing:
                 operation_name: ingress
-              stat_prefix: ingress_http
+              stat_prefix: ingress-http
               route_config:
                 {{/* i think i can change this from service1_route */}}
                 name: service_route
@@ -31,13 +31,15 @@ data:
                   - match:
                       prefix: "/"
                     route:
-                      cluster: local_service
+                      cluster: local-service
                     decorator:
                       operation: {{ .Values.name }}-envoy-ingress
               http_filters:
               - name: envoy.router
                 config: {}
-      {{/* this listener is not used until app is changed to use service-b-envoy - so it sends to this listener (localhost:80) */}}
+      {{/* this listener is used if app tries to access service-b as service-b-envoy.
+           service-b-envoy resolves to localhost:80 (via ExternalName Service), and service-b-envoy is mapped to service-b here.
+      */}}
       - address:
           socket_address:
             address: 0.0.0.0
@@ -48,7 +50,7 @@ data:
             config:
               tracing:
                 operation_name: egress
-              stat_prefix: egress_http
+              stat_prefix: egress-http
               {{/* REVISIT: do i need to create the specific routes ahead of time????? */}}
               route_config:
                 name: services_route
@@ -63,7 +65,7 @@ data:
                       host_rewrite: service-a
                       cluster: service-a
                     decorator:
-                      operation: service_a
+                      operation: service-a-eastwest
                 - name: service-b-envoy
                   domains:
                   - "service-b-envoy"
@@ -74,13 +76,13 @@ data:
                       host_rewrite: service-b
                       cluster: service-b
                     decorator:
-                      operation: service_b
+                      operation: service-b-eastwest
               http_filters:
               - name: envoy.router
                 config: {}
 
       clusters:
-      - name: local_service
+      - name: local-service
         connect_timeout: 0.250s
         type: strict_dns
         lb_policy: round_robin
@@ -112,26 +114,14 @@ data:
         - socket_address:
             address: jaeger-zipkin
             port_value: 9411
-{{/* 
-      - name: honeycomb-opentracing-proxy
-        connect_timeout: 1s
-        type: strict_dns
-        lb_policy: round_robin
-        hosts:
-        - socket_address:
-            address: honeycomb-opentracing-proxy
-            port_value: 9411
-*/}}
     tracing:
       http:
         name: envoy.zipkin
         config:
           collector_cluster: jaeger-zipkin
           collector_endpoint: "/api/v1/spans"
-          shared_span_context: false {{/* i don't know what this is, but it was in Sandbox example */}}
-{{/* 
-          collector_cluster: honeycomb-opentracing-proxy
-          collector_endpoint: "/api/v1/spans"
+{{/* try commenting this out.  it is in envoy jaeger sandbox... but i'm not sure why
+          shared_span_context: false
 */}}
     admin:
       access_log_path: "/var/log/admin-access.log"
