@@ -104,6 +104,14 @@ data:
         - socket_address:
             address: service-b
             port_value: 80
+      - name: jaeger-zipkin
+        connect_timeout: 1s
+        type: strict_dns
+        lb_policy: round_robin
+        hosts:
+        - socket_address:
+            address: jaeger-zipkin
+            port_value: 9411
 {{/* 
       - name: honeycomb-opentracing-proxy
         connect_timeout: 1s
@@ -113,10 +121,15 @@ data:
         - socket_address:
             address: honeycomb-opentracing-proxy
             port_value: 9411
+*/}}
     tracing:
       http:
         name: envoy.zipkin
         config:
+          collector_cluster: jaeger-zipkin
+          collector_endpoint: "/api/v1/spans"
+          shared_span_context: false {{/* i don't know what this is, but it was in Sandbox example */}}
+{{/* 
           collector_cluster: honeycomb-opentracing-proxy
           collector_endpoint: "/api/v1/spans"
 */}}
