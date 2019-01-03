@@ -40,16 +40,30 @@ func handler(w http.ResponseWriter, r *http.Request) {
     nextPath := strings.Join(nextPathSlice, "/")
     url := "http://" + nextService + "/" + nextPath
     //fmt.Fprintf(w, "%s: TODO: call http://%s/%s and return response!\n", service, nextService, nextPath)
-    response, err := http.Get(url)
+
+    client := &http.Client{
+      CheckRedirect: nil,
+    }
+    //response, err := http.Get(url)
+    request, err := http.NewRequest("GET", url, nil)
     if err != nil {
       log.Printf("ERR: GET(%s)\n", url)
       log.Fatal(err)
     } else {
-      defer response.Body.Close()
-      responseBody, _ := ioutil.ReadAll(response.Body)
-      responseText := string(responseBody)
-      fmt.Fprintf(w, "%s-%s: GET %s returned code=%d body=%s", service, ip, url, response.StatusCode, responseText)
-      log.Printf("%s-%s: call to GET %s returned code=%d body=%s", service, ip, url, response.StatusCode, responseText)
+      request.Header.Set("X-B3-Traceid", r.Header.Get("X-B3-Traceid"))
+      request.Header.Set("X-B3-Spanid", r.Header.Get("X-B3-Spanid"))
+      request.Header.Set("X-B3-Sampled", r.Header.Get("X-B3-Sampled"))
+      response, err := client.Do(request)
+      //defer response.Body.Close()
+      if err != nil {
+        log.Printf("ERR: GET(%s)\n", url)
+        log.Fatal(err)
+      } else {
+        responseBody, _ := ioutil.ReadAll(response.Body)
+        responseText := string(responseBody)
+        fmt.Fprintf(w, "%s-%s: GET %s returned code=%d body=%s", service, ip, url, response.StatusCode, responseText)
+        log.Printf("%s-%s: call to GET %s returned code=%d body=%s", service, ip, url, response.StatusCode, responseText)
+      }
     }
   }  else {
     response := service + "-" + ip + ": path=" + r.URL.Path

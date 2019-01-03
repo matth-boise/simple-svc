@@ -12,7 +12,7 @@ cpCommon:
 #
 
 # name: service-a
-replicaCount: 3
+replicaCount: 1
 
 command: /usr/bin/simple-svc
 image: simple-svc:v1
