@@ -21,7 +21,6 @@ data:
                 operation_name: ingress
               stat_prefix: ingress-http
               route_config:
-                {{/* i think i can change this from service1_route */}}
                 name: service_route
                 virtual_hosts:
                 - name: {{ .Values.name }}

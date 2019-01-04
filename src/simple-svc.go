@@ -10,7 +10,7 @@ import (
   "net/http"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func getServiceAndIP() (string, string) {
   service, exists := os.LookupEnv("SERVICE_NAME")
   if !exists {
     service = "unknown-service"
@@ -19,6 +19,22 @@ func handler(w http.ResponseWriter, r *http.Request) {
   if !exists {
     ip = "unknown-IP"
   }
+  return service, ip
+}
+
+// if headerNames header exist in srcRequest.Headers, copy them to to destRequest.Headers
+func copyHeaders(headerNames []string, srcRequest *http.Request, destRequest *http.Request) {
+  for _, headerName := range headerNames {
+    // TODO: make sure headerName exists in srcRequest.Header
+    if headerValue := srcRequest.Header.Get(headerName); headerValue != "" {
+      destRequest.Header.Set(headerName, headerValue)
+    }
+  }
+}
+
+
+func handler(w http.ResponseWriter, r *http.Request) {
+  service, ip := getServiceAndIP()
 
   log.Printf("%s called with Host: %s  and other headers:", service, r.Host)
   var headers []string
@@ -47,12 +63,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
     //response, err := http.Get(url)
     request, err := http.NewRequest("GET", url, nil)
     if err != nil {
-      log.Printf("ERR: GET(%s)\n", url)
+      log.Printf("ERR: http.NewRequest(\"GET\", url=%s)\n", url)
       log.Fatal(err)
     } else {
-      request.Header.Set("X-B3-Traceid", r.Header.Get("X-B3-Traceid"))
-      request.Header.Set("X-B3-Spanid", r.Header.Get("X-B3-Spanid"))
-      request.Header.Set("X-B3-Sampled", r.Header.Get("X-B3-Sampled"))
+      headerNames := []string{"X-Request-Id", "X-B3-Traceid", "X-B3-Spanid", "X-B3-Sampled", "X-B3-Parentspanid", "X-B3-Flags"}
+      copyHeaders(headerNames, r, request)
       response, err := client.Do(request)
       //defer response.Body.Close()
       if err != nil {

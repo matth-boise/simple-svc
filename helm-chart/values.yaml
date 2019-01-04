@@ -5,14 +5,8 @@ cpCommon:
         image:
           foo: bar
 
-# model
-#   Service svc.yaml name={{ .Values.name }} => selector app={{ .Values.name }}
-#   Deployment deployment.yaml name={{ .Values.name }} image={{ .Values.image }}
-#
-#
-
-# name: service-a
-replicaCount: 1
+# name: service-xyz # must set name at helm install/upgrade via --set name=service-xyz
+replicaCount: 3
 
 command: /usr/bin/simple-svc
 image: simple-svc:v1

@@ -35,6 +35,11 @@ spec:
           image: {{ .Values.envoy.image | quote }}
           command: ["envoy"]
           args: ["-c", "/etc/envoy.yaml", "-l", "info", "--service-cluster", "{{ .Values.name }}", "--service-node", "$(NODE_NAME)"]
+          env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
           volumeMounts:
           - name: envoy-yaml
             mountPath: /etc/envoy.yaml
@@ -66,10 +71,6 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: status.podIP
-          - name: NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
           # NOTE: defining this env var usually overrides the dns lookup for service-b to this value
           # - name: SERVICE_B_SERVICE_HOST
           #   value: "172.17.0.8"

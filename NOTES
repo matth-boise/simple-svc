@@ -1,0 +1,6 @@
+it looks like when service-a calls service-b's Service ip (no port - i.e., :80)
+  the called url is not modified with the Service containerPort (:9000) thus service-b's envoy matches the call to filter listener for service-b-eastwest.
+
+read documentation...
+- the ingress listener has use_original_dst, though that may be deprecated?  regardless, should be able to set listeners up 
+  to differentiate only local networking (outbound eastwest) and networking from the outside (whether using original_dst port - or other)
