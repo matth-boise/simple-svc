@@ -6,7 +6,7 @@ cpCommon:
           foo: bar
 
 # name: service-xyz # must set name at helm install/upgrade via --set name=service-xyz
-replicaCount: 3
+replicaCount: 1
 
 command: /usr/bin/simple-svc
 image: simple-svc:v1
@@ -16,7 +16,8 @@ serviceType: LoadBalancer
 servicePort: 80
 
 envoy:
-  image: simple-envoy:v1
+  image: envoyproxy/envoy:v1.9.0
+  # image: simple-envoy:v1
   # image: envoyproxy/envoy-alpine:a89eb3c59204caa3e0cd1bcd845bcb1a0be95267
   containerPort: 9000 # ingress
   egressPort: 80 # NOTE: using ExternalName service means no port can be specified - just 127.0.0.1.  default port is 80 so...
